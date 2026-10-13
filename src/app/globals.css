@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-limestone: #F3EDE3;
+  --text-charcoal: #292720;
+  --accent-terracotta: #A65D3B;
+  --surface-sandstone: #D8C8B2;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: #F3EDE3;
+    color: #292720;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #F3EDE3;
+    color: #292720;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: #A65D3B;
+    color: #FAF7F2;
+  }
+
+  /* Accessible focus ring */
+  *:focus-visible {
+    outline: 2px solid #A65D3B;
+    outline-offset: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom architectural scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ECE3D4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C2AC8F;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A65D3B;
+}
+
+/* Editorial line rules & decorative touches */
+.border-fine {
+  border-color: rgba(41, 39, 32, 0.12);
+}
+
+.border-fine-light {
+  border-color: rgba(243, 237, 227, 0.2);
+}
+
+.editorial-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(41, 39, 32, 0) 0%, rgba(41, 39, 32, 0.15) 30%, rgba(41, 39, 32, 0.15) 70%, rgba(41, 39, 32, 0) 100%);
+}
+
+/* Subtle architectural paper grain texture */
+.architectural-grain {
+  background-image: radial-gradient(rgba(41, 39, 32, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}

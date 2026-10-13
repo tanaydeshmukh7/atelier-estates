@@ -1,0 +1,8 @@
+import { getPropertyBySlug } from '@/lib/properties';
+import { agencyConfig } from '@/config/agency';
+import EnquiryForm from '@/components/enquiry/EnquiryForm';
+
+export default async function ContactPage({ searchParams }: { searchParams: { property?: string } }) {
+  const selected = searchParams.property ? await getPropertyBySlug(searchParams.property) : null;
+  return <div className="mx-auto grid max-w-7xl gap-16 px-6 pb-24 pt-40 lg:grid-cols-12 lg:px-12"><div className="lg:col-span-5"><p className="font-mono text-[10px] uppercase tracking-widest text-terracotta">Private advisory</p><h1 className="mt-5 font-serif text-6xl leading-[.92]">Let’s begin a conversation.</h1><p className="mt-8 max-w-sm text-sm leading-7 text-charcoal-600">Whether you are looking for a particular piece of architecture or preparing to place a residence, our advisory desk works discreetly and deliberately.</p><div className="mt-12 space-y-5 border-t border-charcoal-800/15 pt-6 text-sm"><a className="block hover:text-terracotta" href={`mailto:${agencyConfig.contact.conciergeEmail}`}>{agencyConfig.contact.conciergeEmail}</a><a className="block hover:text-terracotta" href={`tel:${agencyConfig.contact.phone}`}>{agencyConfig.contact.phone}</a><p className="text-charcoal-500">{agencyConfig.contact.offices[0].address}<br />{agencyConfig.contact.offices[0].hours}</p></div></div><div className="bg-sandstone-tint p-7 md:p-12 lg:col-span-6 lg:col-start-7"><p className="mb-8 font-serif text-3xl">{selected?.property ? `Enquire about ${selected.property.title}` : 'Tell us what you are looking for.'}</p><EnquiryForm propertyId={selected?.property?.id} propertyTitle={selected?.property?.title} /></div></div>;
+}
