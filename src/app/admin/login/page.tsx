@@ -91,8 +91,10 @@ export default function AdminLoginPage() {
       setError('Supabase is not configured for this environment.');
       return;
     }
+    const redirectTo = getPasswordResetRedirectUrl();
+    console.info('[auth] password reset redirect selected', redirectTo);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getPasswordResetRedirectUrl(),
+      redirectTo,
     });
     if (resetError) {
       setError('Unable to send a password reset email. Check the email and Supabase Auth URL settings.');
