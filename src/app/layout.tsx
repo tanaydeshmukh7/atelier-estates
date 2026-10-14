@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import DemoStatusBanner from '@/components/common/DemoStatusBanner';
+import RecoveryRedirect from '@/components/auth/RecoveryRedirect';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable}`}>
       <body className="font-sans bg-limestone-100 text-charcoal-800 antialiased selection:bg-terracotta selection:text-white">
+        <RecoveryRedirect />
         <DemoStatusBanner />
         <Navbar />
         <main className="min-h-screen">{children}</main>
