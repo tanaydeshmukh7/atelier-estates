@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowUpRight, LockKeyhole } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
 
+const PASSWORD_RESET_SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://atelier-estates-one.vercel.app';
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -72,7 +75,7 @@ export default function AdminLoginPage() {
       return;
     }
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/admin/reset-password`,
+      redirectTo: `${PASSWORD_RESET_SITE_URL}/admin/reset-password`,
     });
     if (resetError) {
       setError('Unable to send a password reset email. Check the email and Supabase Auth URL settings.');

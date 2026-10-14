@@ -88,6 +88,7 @@ Set the following values in `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+NEXT_PUBLIC_SITE_URL=https://atelier-estates-one.vercel.app
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
@@ -105,13 +106,12 @@ Restart the development server after changing `.env.local`; Next.js reads enviro
 
 ### Password reset links
 
-Password reset emails return to the site where the reset was requested. For local testing, request the email from `http://localhost:3000/admin/login` and keep the development server running until the link is opened. For production, request it from the deployed `/admin/login` page so the email returns to the deployed domain instead of localhost.
+Password reset emails always return to the production Vercel site configured by `NEXT_PUBLIC_SITE_URL`, not localhost. Set this variable to the main deployed domain in Vercel and redeploy after changing it.
 
 In Supabase, open **Authentication > URL Configuration** and set the production **Site URL** to the deployed site URL. Add both redirect URLs:
 
 ```text
-http://localhost:3000/admin/reset-password
-https://your-production-domain.com/admin/reset-password
+https://atelier-estates-one.vercel.app/admin/reset-password
 ```
 
 Each recovery link is single-use and expires. If Supabase shows `otp_expired`, request a fresh email and open only the newest link. Do not reuse a link after it has already opened the reset page.
