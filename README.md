@@ -103,6 +103,19 @@ Open http://localhost:3000.
 
 Restart the development server after changing `.env.local`; Next.js reads environment variables when the server starts.
 
+### Password reset links
+
+Password reset emails return to the site where the reset was requested. For local testing, request the email from `http://localhost:3000/admin/login` and keep the development server running until the link is opened. For production, request it from the deployed `/admin/login` page so the email returns to the deployed domain instead of localhost.
+
+In Supabase, open **Authentication > URL Configuration** and set the production **Site URL** to the deployed site URL. Add both redirect URLs:
+
+```text
+http://localhost:3000/admin/reset-password
+https://your-production-domain.com/admin/reset-password
+```
+
+Each recovery link is single-use and expires. If Supabase shows `otp_expired`, request a fresh email and open only the newest link. Do not reuse a link after it has already opened the reset page.
+
 ## Supabase setup
 
 The application uses the existing richer property model rather than replacing it with a simplified schema.

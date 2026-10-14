@@ -21,6 +21,16 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const queryParams = new URLSearchParams(window.location.search);
+    const recoveryErrorCode = hashParams.get('error_code') ?? queryParams.get('error_code');
+    const recoveryError = hashParams.get('error') ?? queryParams.get('error');
+    if (recoveryErrorCode === 'otp_expired' || recoveryError === 'access_denied') {
+      setMessage('');
+      setError('This password reset link has expired or has already been used. Return to the login page and request a new reset email.');
+      return;
+    }
+
     const recoveryListener = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setMessage('');
