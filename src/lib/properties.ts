@@ -18,7 +18,7 @@ export async function getProperties(filters?: Partial<PropertyFilterState>): Pro
     try {
       let query = supabase
         .from('properties')
-        .select('*')
+        .select('*, property_images(*)')
         .not('published_at', 'is', null)
         .in('status', ['available', 'under_offer', 'private_treaty']);
 
@@ -53,7 +53,7 @@ export async function getProperties(filters?: Partial<PropertyFilterState>): Pro
           specs: item.specs,
           features: item.features || [],
           materials: item.materials || [],
-          images: item.images || [],
+          images: mapImages(item),
           isFeatured: item.is_featured ?? item.isFeatured ?? false,
           publishedAt: item.published_at || item.created_at,
         }));
@@ -89,7 +89,7 @@ export async function getPropertyBySlug(slug: string): Promise<{
     try {
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select('*, property_images(*)')
         .eq('slug', slug)
         .not('published_at', 'is', null)
         .in('status', ['available', 'under_offer', 'private_treaty'])
@@ -118,13 +118,14 @@ export async function getPropertyBySlug(slug: string): Promise<{
             specs: data.specs,
             features: data.features || [],
             materials: data.materials || [],
-            images: data.images || [],
+            images: mapImages(data),
             isFeatured: data.is_featured ?? data.isFeatured ?? false,
             publishedAt: data.published_at || data.created_at,
           },
           isDemo: false,
         };
       }
+
     } catch (err) {
       console.error('Supabase property detail query failed:', err);
       return { property: null, isDemo: false };
@@ -133,6 +134,20 @@ export async function getPropertyBySlug(slug: string): Promise<{
 
   const prop = demoProperties.find((p) => p.slug === slug) || null;
   return { property: prop, isDemo: !isSupabaseConfigured() };
+}
+
+function mapImages(item: Record<string, unknown>): Property['images'] {
+  const normalized = Array.isArray(item.property_images)
+    ? (item.property_images as Array<Record<string, unknown>>)
+      .sort((a, b) => Number(a.display_order ?? 0) - Number(b.display_order ?? 0))
+      .map((image) => ({
+        url: String(image.image_url),
+        alt: String(image.alt_text || item.title || 'Property image'),
+        isHero: Number(image.display_order ?? 0) === 0,
+      }))
+    : [];
+  if (normalized.length) return normalized;
+  return Array.isArray(item.images) ? item.images as Property['images'] : [];
 }
 
 /**

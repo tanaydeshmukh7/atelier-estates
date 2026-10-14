@@ -15,6 +15,7 @@ Atelier Estates is a premium editorial real estate website built for architectur
 - Procedural Three.js architecture scene with GSAP scroll-linked stages.
 - Supabase property queries with published-listing filtering.
 - Secure server-side enquiry submission through `/api/enquiries`.
+- Protected agency dashboard at `/admin` with Supabase Auth, membership authorization, property CRUD, publication controls, and Storage-backed photography.
 - Validation, honeypot spam protection, basic email rate limiting, and duplicate-submit prevention.
 - Accessible loading, empty, error, and not-found states.
 - Reduced-motion CSS support and responsive layouts.
@@ -36,6 +37,7 @@ Atelier Estates is a premium editorial real estate website built for architectur
 src/
   app/
     api/enquiries/          Secure enquiry endpoint
+    admin/                  Protected agency login and property management
     about/                  Agency story
     contact/                Contact and enquiry form
     properties/             Collection and dynamic property pages
@@ -48,12 +50,15 @@ src/
   data/                     Clearly labelled portfolio fallback data
   lib/
     properties.ts           Property query and mapping helpers
+    admin-auth.ts           Bearer-token membership authorization
+    admin-property.ts       Server-side property validation
     supabase.ts             Browser-safe Supabase client
     supabase-admin.ts       Server-only service-role client
   types/                    Property and enquiry types
 supabase/
   schema.sql                Main schema, policies, and seed data
   001_secure_enquiries.sql  Follow-up security migration
+  002_agency_management.sql Membership RLS and property-images Storage policies
 ```
 
 ## Run locally
@@ -106,6 +111,16 @@ The application uses the existing richer property model rather than replacing it
 4. Run `supabase/001_secure_enquiries.sql`.
 5. Confirm that `properties`, `property_images`, and `enquiries` exist in **Table Editor**.
 6. Confirm that the `property-media` storage bucket exists if you use Supabase-hosted images.
+7. Run `supabase/002_agency_management.sql`.
+8. Confirm that the `property-images` storage bucket exists and is public. Public image URLs are intentionally readable by anyone who has the URL; draft property records and image metadata remain hidden by RLS.
+9. In Supabase Authentication, create the first administrator user with email/password. Then run this SQL once, replacing the email:
+
+```sql
+INSERT INTO public.agency_members (user_id, role)
+SELECT id, 'admin' FROM auth.users WHERE email = 'admin@example.com';
+```
+
+Disable public sign-up in **Authentication > Providers > Email**. Add subsequent agents only through a controlled administrator operation; never trust a browser-provided role or email address for authorization.
 
 The schema includes:
 
@@ -114,7 +129,7 @@ The schema includes:
 - `enquiries` for visitor requests and internal enquiry status.
 - Row Level Security policies for published property reads and administrator management.
 
-Public users can read published properties and public image metadata. Enquiries are inserted by the server route with the server-only service-role client; public users have no direct enquiry read or insert policy. Administrators require an authenticated user with `app_metadata.role = 'admin'`.
+Public users can read published properties and public image metadata. Enquiries are inserted by the server route with the server-only service-role client; public users have no direct enquiry read or insert policy. Management requires an authenticated Supabase user whose UUID is present in `agency_members` with role `agent` or `admin`. Only administrators can change that table under RLS.
 
 ## How enquiries work
 
@@ -175,6 +190,19 @@ npm run build
 ```
 
 Never commit `.env.local` or any service-role key. The repository `.gitignore` excludes local environment files, `.next`, `node_modules`, logs, and TypeScript build metadata.
+
+## Admin verification checklist
+
+After applying the migrations, verify with two Auth users (one provisioned in `agency_members`, one not provisioned):
+
+1. A signed-out visitor is redirected from `/admin` to `/admin/login`.
+2. A signed-in but unauthorized user is signed out and denied by `/api/admin/me`.
+3. An authorized agent can save a draft, upload multiple JPEG/PNG/WebP images, select the first image as cover, edit it, publish it, and see it at `/properties/<slug>`.
+4. Unpublishing removes the listing from public collection/detail queries; deleting it removes normalized metadata and attempts Storage cleanup.
+5. An agent cannot insert, update, or delete `agency_members`, promote itself, or mutate listings through direct Supabase calls without membership RLS approval.
+6. Public anonymous requests cannot select draft properties or insert/update/delete listings.
+
+The dashboard sends access tokens only to server API routes. The service-role key is never sent to the browser. Image files are stored in the public `property-images` bucket under a user-scoped path; do not use that bucket for private or sensitive media.
 
 ## Design and implementation notes
 
