@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, LogOut, Plus, Settings, Sparkles } from 'lucide-react';
+import { BarChart3, Inbox, LayoutDashboard, LogOut, Plus, Sparkles } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
 
 interface AdminShellProps {
@@ -64,6 +64,8 @@ export default function AdminShell({ children }: AdminShellProps) {
             <AdminLink href="/admin" active={pathname === '/admin'} icon={<LayoutDashboard className="h-4 w-4" />}>Overview</AdminLink>
             <AdminLink href="/admin/properties" active={pathname.startsWith('/admin/properties')} icon={<Sparkles className="h-4 w-4" />}>Properties</AdminLink>
             <AdminLink href="/admin/properties/new" active={pathname === '/admin/properties/new'} icon={<Plus className="h-4 w-4" />}>Add property</AdminLink>
+            <AdminLink href="/admin/analytics" active={pathname.startsWith('/admin/analytics')} icon={<BarChart3 className="h-4 w-4" />}>Analytics</AdminLink>
+            <AdminLink href="/admin/enquiries" active={pathname.startsWith('/admin/enquiries')} icon={<Inbox className="h-4 w-4" />}>Enquiries</AdminLink>
           </nav>
           <button onClick={logout} className="mt-8 inline-flex items-center gap-2 text-xs uppercase tracking-wideEditorial text-charcoal-500 hover:text-terracotta">
             <LogOut className="h-4 w-4" /> Sign out

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase-admin';
 import type { EnquiryType } from '@/types/enquiry';
+import { getVisitorContextFromCookieHeader, isVisitorId } from '@/lib/visitor';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -24,6 +25,9 @@ export async function POST(request: Request) {
   const notes = typeof body.notes === 'string' ? body.notes.trim() : '';
   const type = body.type as EnquiryType;
   const propertyId = typeof body.propertyId === 'string' && body.propertyId.trim() !== '' ? body.propertyId.trim() : null;
+  const cookieContext = getVisitorContextFromCookieHeader(request.headers.get('cookie'));
+  const visitorId = isVisitorId(body.visitorId) && (!cookieContext.visitorId || body.visitorId === cookieContext.visitorId) ? body.visitorId : null;
+  const sessionId = isVisitorId(body.sessionId) && (!cookieContext.sessionId || body.sessionId === cookieContext.sessionId) ? body.sessionId : null;
   const phoneIsValid = phone === '' || (phone.length >= 5 && phone.length <= 40);
   if (fullName.length < 2 || fullName.length > 100 || !emailPattern.test(email) || email.length > 160 || !phoneIsValid || notes.length < 10 || notes.length > 2000 || !['viewing', 'general', 'private_acquisition', 'consignment'].includes(type) || (propertyId !== null && !uuidPattern.test(propertyId))) {
     console.warn(`[enquiries] stage=validation status=400 email_domain=${email.split('@')[1] ?? 'missing'} property_id_valid=${propertyId === null || uuidPattern.test(propertyId)}`);
@@ -54,6 +58,8 @@ export async function POST(request: Request) {
     notes,
     type,
     status: 'pending',
+    visitor_id: visitorId,
+    session_id: sessionId,
   });
   if (error) {
     console.error(`[enquiries] stage=supabase-insert status=502 code=${error.code ?? 'unknown'} message=${error.message ?? 'unknown'} details=${error.details ?? 'none'}`);

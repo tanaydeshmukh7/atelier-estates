@@ -16,6 +16,7 @@ Atelier Estates is a premium editorial real estate website built for architectur
 - Supabase property queries with published-listing filtering.
 - Secure server-side enquiry submission through `/api/enquiries`.
 - Protected agency dashboard at `/admin` with Supabase Auth, membership authorization, property CRUD, publication controls, and Storage-backed photography.
+- Privacy-friendly anonymous property visit analytics and protected enquiry management at `/admin/analytics` and `/admin/enquiries`.
 - Validation, honeypot spam protection, basic email rate limiting, and duplicate-submit prevention.
 - Accessible loading, empty, error, and not-found states.
 - Reduced-motion CSS support and responsive layouts.
@@ -59,6 +60,7 @@ supabase/
   schema.sql                Main schema, policies, and seed data
   001_secure_enquiries.sql  Follow-up security migration
   002_agency_management.sql Membership RLS and property-images Storage policies
+  003_property_analytics.sql Anonymous visits, enquiry correlation, and retention indexes
 ```
 
 ## Run locally
@@ -121,6 +123,8 @@ SELECT id, 'admin' FROM auth.users WHERE email = 'admin@example.com';
 ```
 
 Disable public sign-up in **Authentication > Providers > Email**. Add subsequent agents only through a controlled administrator operation; never trust a browser-provided role or email address for authorization.
+
+Property visit analytics requires `supabase/003_property_analytics.sql`. It creates a deduplicated `property_visits` table and adds optional `visitor_id`/`session_id` columns to `enquiries`. Raw visit events are configured for a 365-day retention period; enable the commented `pg_cron` cleanup job in that migration if your Supabase plan supports it.
 
 The schema includes:
 
@@ -203,6 +207,8 @@ After applying the migrations, verify with two Auth users (one provisioned in `a
 6. Public anonymous requests cannot select draft properties or insert/update/delete listings.
 
 The dashboard sends access tokens only to server API routes. The service-role key is never sent to the browser. Image files are stored in the public `property-images` bucket under a user-scoped path; do not use that bucket for private or sensitive media.
+
+Property analytics uses a random first-party visitor UUID and a session UUID stored in cookies. It does not use IP addresses, fingerprinting, precise location, or visitor identity claims. Enquiry contact details are collected only when voluntarily submitted through the advisory form. Anonymous visit records are visible only to authorized agency members; enquiry read/update access follows the existing administrator-only RLS policy.
 
 ## Design and implementation notes
 
