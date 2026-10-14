@@ -20,9 +20,12 @@ export default function ResetPasswordPage() {
       setError('Supabase is not configured for this environment.');
       return;
     }
+    const client = supabase;
 
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const queryParams = new URLSearchParams(window.location.search);
+    const code = queryParams.get('code');
+    const hasImplicitRecovery = hashParams.get('type') === 'recovery' && hashParams.has('access_token');
     const recoveryErrorCode = hashParams.get('error_code') ?? queryParams.get('error_code');
     const recoveryError = hashParams.get('error') ?? queryParams.get('error');
     if (recoveryErrorCode === 'otp_expired' || recoveryError === 'access_denied') {
@@ -31,23 +34,59 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    const recoveryListener = supabase.auth.onAuthStateChange((event) => {
+    let active = true;
+    let recoverySession = false;
+    let finishWait: ((valid: boolean) => void) | null = null;
+    const waitForImplicitSession = new Promise<boolean>((resolve) => {
+      finishWait = resolve;
+    });
+
+    const recoveryListener = client.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
+        recoverySession = true;
+        finishWait?.(true);
+      }
+    });
+
+    async function initializeRecovery() {
+      if (code) {
+        const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          if (active) {
+            setMessage('');
+            setError(`This recovery link could not be verified: ${exchangeError.message}`);
+          }
+          return;
+        }
+        recoverySession = true;
+      }
+
+      const { data } = await client.auth.getSession();
+      if (!data.session && hasImplicitRecovery) {
+        await Promise.race([
+          waitForImplicitSession,
+          new Promise<boolean>((resolve) => window.setTimeout(() => resolve(false), 2000)),
+        ]);
+      }
+
+      const { data: refreshed } = await client.auth.getSession();
+      if (!active) return;
+      if (refreshed.session && (recoverySession || code || hasImplicitRecovery)) {
         setMessage('');
         setError('');
-      }
-    });
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        setMessage('');
-        setError('This recovery link is missing or has expired. Request a new reset email.');
+        window.history.replaceState(null, '', '/admin/reset-password');
       } else {
         setMessage('');
+        setError('This recovery link is missing, invalid, or has expired. Request a new reset email.');
       }
-    });
+    }
 
-    return () => recoveryListener.data.subscription.unsubscribe();
+    void initializeRecovery();
+
+    return () => {
+      active = false;
+      recoveryListener.data.subscription.unsubscribe();
+    };
   }, []);
 
   async function submit(event: FormEvent) {
@@ -70,7 +109,7 @@ export default function ResetPasswordPage() {
     setSaving(true);
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
-      setError('Unable to update the password. Request a new recovery email and try again.');
+      setError(`Unable to update the password: ${updateError.message}`);
       setSaving(false);
       return;
     }
@@ -86,6 +125,7 @@ export default function ResetPasswordPage() {
         <p className="mt-5 text-sm leading-7 text-limestone-100/65">Choose a new password for your agency account.</p>
         {message && <p className="mt-8 text-sm text-limestone-100/70">{message}</p>}
         {error && <p role="alert" className="mt-8 border border-terracotta-light/50 bg-terracotta/20 px-4 py-3 text-sm text-limestone-100">{error}</p>}
+        {error && <a href="/admin/login" className="mt-5 inline-block text-xs uppercase tracking-wideEditorial text-terracotta-light hover:text-limestone-100">Request a new reset email</a>}
         {!message && !error && (
           <form onSubmit={submit} className="mt-10 space-y-5">
             <label className="block text-xs uppercase tracking-wideEditorial">New password<input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full border border-limestone-100/20 bg-transparent px-4 py-3 text-sm outline-none focus:border-terracotta-light" /></label>

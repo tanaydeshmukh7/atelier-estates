@@ -34,6 +34,9 @@ export default function AdminLoginPage() {
     if (window.location.search.includes('unauthorized')) {
       setError('Your account is not authorized for agency management.');
     }
+    if (window.location.search.includes('reset=success')) {
+      setNotice('Your password was updated. Sign in with your new password.');
+    }
     getSupabaseClient()?.auth.getSession().then(({ data }) => {
       if (data.session) router.replace('/admin');
     });
