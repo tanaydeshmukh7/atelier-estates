@@ -6,10 +6,15 @@ import { getProperties } from '@/lib/properties';
 import PropertyCard from '@/components/properties/PropertyCard';
 import ArchitecturalHero3D from '@/components/3d/ArchitecturalHero3D';
 
+const defaultHeroImage = {
+  url: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=85',
+  alt: 'Villa Solstice exterior',
+};
+
 export default async function HomePage() {
   const { properties, isDemo } = await getProperties();
   const featured = properties.filter((property) => property.isFeatured).slice(0, 3);
-  const heroImage = featured[0]?.images[0];
+  const heroImage = featured[0]?.images[0] ?? defaultHeroImage;
   return <div>
     <section className="relative flex min-h-[90vh] items-end overflow-hidden bg-charcoal-900 text-limestone-100">
       {heroImage && <Image src={heroImage.url} alt={heroImage.alt} fill priority sizes="100vw" className="object-cover opacity-55" />}
