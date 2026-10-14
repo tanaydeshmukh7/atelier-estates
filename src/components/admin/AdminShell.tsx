@@ -17,7 +17,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (pathname === '/admin/login') {
+    if (pathname === '/admin/login' || pathname === '/admin/reset-password') {
       setChecking(false);
       return;
     }
@@ -49,7 +49,7 @@ export default function AdminShell({ children }: AdminShellProps) {
     router.replace('/admin/login');
   }
 
-  if (pathname === '/admin/login') return <>{children}</>;
+  if (pathname === '/admin/login' || pathname === '/admin/reset-password') return <>{children}</>;
   if (checking) return <div className="min-h-screen bg-charcoal-900 px-6 pt-40 text-center text-limestone-100">Verifying your agency access…</div>;
 
   return (

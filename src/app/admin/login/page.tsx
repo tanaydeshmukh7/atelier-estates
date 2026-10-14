@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
       return;
     }
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/admin/login`,
+      redirectTo: `${window.location.origin}/admin/reset-password`,
     });
     if (resetError) {
       setError('Unable to send a password reset email. Check the email and Supabase Auth URL settings.');
