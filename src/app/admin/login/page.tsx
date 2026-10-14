@@ -10,6 +10,7 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function AdminLoginPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
+    setNotice('');
     setLoading(true);
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -33,7 +35,14 @@ export default function AdminLoginPage() {
     }
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) {
-      setError('Unable to sign in with those credentials.');
+      const message = signInError.message.toLowerCase();
+      if (message.includes('email not confirmed')) {
+        setError('This email address is not confirmed in Supabase Auth.');
+      } else if (message.includes('invalid login credentials')) {
+        setError('The password is incorrect, or this user has no email/password login identity. Reset the password in Supabase Auth and try again.');
+      } else {
+        setError('Supabase could not sign you in. Check the email, password, and project configured in .env.local.');
+      }
       setLoading(false);
       return;
     }
@@ -50,6 +59,28 @@ export default function AdminLoginPage() {
     router.replace('/admin');
   }
 
+  async function resetPassword() {
+    setError('');
+    setNotice('');
+    if (!email) {
+      setError('Enter your email address first, then choose reset password.');
+      return;
+    }
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError('Supabase is not configured for this environment.');
+      return;
+    }
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/admin/login`,
+    });
+    if (resetError) {
+      setError('Unable to send a password reset email. Check the email and Supabase Auth URL settings.');
+      return;
+    }
+    setNotice('Password reset instructions have been sent if this email belongs to an Auth user.');
+  }
+
   return (
     <div className="min-h-screen bg-charcoal-900 px-6 pb-20 pt-40 text-limestone-100">
       <div className="mx-auto max-w-md">
@@ -60,7 +91,9 @@ export default function AdminLoginPage() {
           <label className="block text-xs uppercase tracking-wideEditorial">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full border border-limestone-100/20 bg-transparent px-4 py-3 text-sm outline-none focus:border-terracotta-light" /></label>
           <label className="block text-xs uppercase tracking-wideEditorial">Password<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full border border-limestone-100/20 bg-transparent px-4 py-3 text-sm outline-none focus:border-terracotta-light" /></label>
           {error && <p role="alert" className="border border-terracotta-light/50 bg-terracotta/20 px-4 py-3 text-sm text-limestone-100">{error}</p>}
+          {notice && <p role="status" className="border border-limestone-100/20 bg-limestone-100/10 px-4 py-3 text-sm text-limestone-100">{notice}</p>}
           <button disabled={loading} className="inline-flex w-full items-center justify-center gap-2 bg-terracotta px-5 py-3 text-xs uppercase tracking-wideEditorial hover:bg-terracotta-light disabled:opacity-50">{loading ? 'Checking access…' : 'Sign in'} <ArrowUpRight className="h-4 w-4" /></button>
+          <button type="button" onClick={resetPassword} className="w-full text-center text-xs uppercase tracking-wideEditorial text-limestone-100/60 hover:text-terracotta-light">Reset password</button>
         </form>
         <p className="mt-8 flex items-center gap-2 text-xs text-limestone-100/45"><LockKeyhole className="h-4 w-4" /> No public self-registration is enabled.</p>
       </div>
