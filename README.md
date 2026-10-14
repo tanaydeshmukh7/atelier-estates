@@ -88,7 +88,6 @@ Set the following values in `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-NEXT_PUBLIC_SITE_URL=https://atelier-estates-one.vercel.app
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
@@ -106,7 +105,7 @@ Restart the development server after changing `.env.local`; Next.js reads enviro
 
 ### Password reset links
 
-Password reset emails always return to the production Vercel site configured by `NEXT_PUBLIC_SITE_URL`, not localhost. Set this variable to the main deployed domain in Vercel and redeploy after changing it.
+Password reset emails always return to the production Vercel site, not localhost.
 
 In Supabase, open **Authentication > URL Configuration** and set the production **Site URL** to the deployed site URL. Add both redirect URLs:
 
