@@ -11,6 +11,8 @@ const defaultHeroImage = {
   alt: 'Villa Solstice exterior',
 };
 
+export const revalidate = 300;
+
 export default async function HomePage() {
   const { properties, isDemo } = await getProperties();
   const featured = properties.filter((property) => property.isFeatured).slice(0, 3);
