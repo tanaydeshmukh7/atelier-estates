@@ -5,21 +5,10 @@ import { useRouter } from 'next/navigation';
 import { ArrowUpRight, LockKeyhole } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
 
-const DEFAULT_PRODUCTION_SITE_URL = 'https://atelier-estates-one.vercel.app';
-
 function getPasswordResetRedirectUrl() {
-  const currentOrigin = window.location.origin;
-  const isLocalDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
-  if (isLocalDevelopment) return `${currentOrigin}/admin/reset-password`;
-
-  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_PRODUCTION_SITE_URL;
-  try {
-    const siteUrl = new URL(configuredSiteUrl);
-    if (siteUrl.protocol !== 'https:') throw new Error('Production site URL must use HTTPS.');
-    return `${siteUrl.origin}/admin/reset-password`;
-  } catch {
-    return `${currentOrigin}/admin/reset-password`;
-  }
+  // Use the host the user is currently visiting so deployment env values
+  // cannot send recovery links to a stale local or preview URL.
+  return `${window.location.origin}/admin/reset-password`;
 }
 
 export default function AdminLoginPage() {
