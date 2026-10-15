@@ -21,7 +21,11 @@ export const getSupabaseClient = (): SupabaseClient | null => {
     return null;
   }
   if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl!, supabasePublishableKey!);
+    supabaseInstance = createClient(supabaseUrl!, supabasePublishableKey!, {
+      auth: {
+        detectSessionInUrl: false,
+      },
+    });
   }
   return supabaseInstance;
 };

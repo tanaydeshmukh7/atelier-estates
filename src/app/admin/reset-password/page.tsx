@@ -28,7 +28,11 @@ export default function ResetPasswordPage() {
     const hasImplicitRecovery = hashParams.get('type') === 'recovery' && hashParams.has('access_token');
     const recoveryErrorCode = hashParams.get('error_code') ?? queryParams.get('error_code');
     const recoveryError = hashParams.get('error') ?? queryParams.get('error');
-    if (recoveryErrorCode === 'otp_expired' || recoveryError === 'access_denied') {
+    if (
+      recoveryErrorCode === 'otp_expired' ||
+      recoveryError === 'access_denied' ||
+      recoveryError === 'invalid_request'
+    ) {
       setMessage('');
       setError('This password reset link has expired or has already been used. Return to the login page and request a new reset email.');
       return;
@@ -36,15 +40,10 @@ export default function ResetPasswordPage() {
 
     let active = true;
     let recoverySession = false;
-    let finishWait: ((valid: boolean) => void) | null = null;
-    const waitForImplicitSession = new Promise<boolean>((resolve) => {
-      finishWait = resolve;
-    });
 
     const recoveryListener = client.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         recoverySession = true;
-        finishWait?.(true);
       }
     });
 
@@ -54,24 +53,38 @@ export default function ResetPasswordPage() {
         if (exchangeError) {
           if (active) {
             setMessage('');
-            setError(`This recovery link could not be verified: ${exchangeError.message}`);
+            setError('This recovery link could not be verified. Request a new reset email.');
           }
           return;
         }
         recoverySession = true;
       }
 
-      const { data } = await client.auth.getSession();
-      if (!data.session && hasImplicitRecovery) {
-        await Promise.race([
-          waitForImplicitSession,
-          new Promise<boolean>((resolve) => window.setTimeout(() => resolve(false), 2000)),
-        ]);
+      if (hasImplicitRecovery) {
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (!accessToken || !refreshToken) {
+          setMessage('');
+          setError('This recovery link is incomplete. Request a new reset email.');
+          return;
+        }
+        const { error: sessionError } = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (sessionError) {
+          if (active) {
+            setMessage('');
+            setError('This recovery link could not be verified. Request a new reset email.');
+          }
+          return;
+        }
+        recoverySession = true;
       }
 
       const { data: refreshed } = await client.auth.getSession();
       if (!active) return;
-      if (refreshed.session && (recoverySession || code || hasImplicitRecovery)) {
+      if (refreshed.session && recoverySession) {
         setMessage('');
         setError('');
         window.history.replaceState(null, '', '/admin/reset-password');
@@ -92,6 +105,7 @@ export default function ResetPasswordPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
+    if (saving) return;
     if (password.length < 8) {
       setError('Your password must be at least 8 characters.');
       return;

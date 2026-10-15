@@ -6,9 +6,7 @@ import { ArrowUpRight, LockKeyhole } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
 
 function getPasswordResetRedirectUrl() {
-  // Use the host the user is currently visiting so deployment env values
-  // cannot send recovery links to a stale local or preview URL.
-  return `${window.location.origin}/admin/reset-password`;
+  return new URL('/admin/reset-password', window.location.origin).toString();
 }
 
 export default function AdminLoginPage() {
@@ -36,13 +34,22 @@ export default function AdminLoginPage() {
     setError('');
     setNotice('');
     setLoading(true);
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setError('Enter your email address first.');
+      setLoading(false);
+      return;
+    }
     const supabase = getSupabaseClient();
     if (!supabase) {
       setError('Supabase is not configured for this environment.');
       setLoading(false);
       return;
     }
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
     if (signInError) {
       const message = signInError.message.toLowerCase();
       if (message.includes('email not confirmed')) {
@@ -52,6 +59,7 @@ export default function AdminLoginPage() {
       } else {
         setError('Supabase could not sign you in. Check the email, password, and project configured in .env.local.');
       }
+      await supabase.auth.signOut();
       setLoading(false);
       return;
     }
@@ -71,7 +79,8 @@ export default function AdminLoginPage() {
   async function resetPassword() {
     setError('');
     setNotice('');
-    if (!email) {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
       setError('Enter your email address first, then choose reset password.');
       return;
     }
@@ -82,7 +91,7 @@ export default function AdminLoginPage() {
     }
     const redirectTo = getPasswordResetRedirectUrl();
     console.info('[auth] password reset redirect selected', redirectTo);
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo,
     });
     if (resetError) {
