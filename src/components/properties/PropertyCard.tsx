@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, BedDouble, Maximize } from 'lucide-react';
 import type { Property } from '@/types/property';
+import { isNewlyAdded } from '@/lib/property-status';
 
 export default function PropertyCard({ property }: { property: Property }) {
   const image = property.images.find((item) => item.isHero) ?? property.images[0];
@@ -24,6 +25,11 @@ export default function PropertyCard({ property }: { property: Property }) {
           <span className="absolute left-4 top-4 bg-limestone-100/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-charcoal-700">
             {property.propertyType}
           </span>
+          {isNewlyAdded(property.publishedAt) && (
+            <span className="absolute right-4 top-4 bg-terracotta px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-limestone-100">
+              Newly added
+            </span>
+          )}
           <span className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center bg-limestone-100 text-charcoal-800 transition group-hover:bg-terracotta group-hover:text-white">
             <ArrowUpRight className="h-4 w-4" />
           </span>

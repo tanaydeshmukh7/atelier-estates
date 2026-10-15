@@ -45,7 +45,7 @@ export interface Property {
   materials: string[];
   images: PropertyImage[];
   isFeatured: boolean;
-  publishedAt: string;
+  publishedAt: string | null;
 }
 
 export interface PropertyFilterState {

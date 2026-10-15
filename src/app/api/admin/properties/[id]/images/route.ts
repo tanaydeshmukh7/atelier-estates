@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getAuthorizedUser, getStorageAdminClient } from '@/lib/admin-auth';
 import { isValidUuid, normalizeImages } from '@/lib/admin-property';
 
@@ -26,8 +27,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     })));
     if (error) return NextResponse.json({ error: 'Unable to save image metadata.' }, { status: 500 });
   }
-  const { error: propertyError } = await authorized.client.from('properties').update({ images }).eq('id', params.id);
+  const { data: property, error: propertyError } = await authorized.client
+    .from('properties')
+    .update({ images })
+    .eq('id', params.id)
+    .select('slug')
+    .single();
   if (propertyError) return NextResponse.json({ error: 'Unable to update property images.' }, { status: 500 });
+  revalidatePath('/properties');
+  revalidatePath(`/properties/${property.slug}`);
   return NextResponse.json({ images });
 }
 

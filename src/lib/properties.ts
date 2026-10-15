@@ -20,7 +20,8 @@ export async function getProperties(filters?: Partial<PropertyFilterState>): Pro
         .from('properties')
         .select('*, property_images(*)')
         .not('published_at', 'is', null)
-        .in('status', ['available', 'under_offer', 'private_treaty']);
+        .in('status', ['available', 'under_offer', 'private_treaty'])
+        .order('published_at', { ascending: false });
 
       if (filters?.propertyType && filters.propertyType !== 'all') {
         query = query.eq('property_type', filters.propertyType);
@@ -55,7 +56,7 @@ export async function getProperties(filters?: Partial<PropertyFilterState>): Pro
           materials: item.materials || [],
           images: mapImages(item),
           isFeatured: item.is_featured ?? item.isFeatured ?? false,
-          publishedAt: item.published_at || item.created_at,
+          publishedAt: typeof item.published_at === 'string' ? item.published_at : null,
         }));
 
         const filtered = applyClientFilters(properties, filters);
@@ -120,7 +121,7 @@ export async function getPropertyBySlug(slug: string): Promise<{
             materials: data.materials || [],
             images: mapImages(data),
             isFeatured: data.is_featured ?? data.isFeatured ?? false,
-            publishedAt: data.published_at || data.created_at,
+            publishedAt: typeof data.published_at === 'string' ? data.published_at : null,
           },
           isDemo: false,
         };

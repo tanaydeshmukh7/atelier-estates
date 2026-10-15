@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowUpRight, BedDouble, Bath, Maximize } from 'lucide-react
 import { getPropertyBySlug } from '@/lib/properties';
 import PropertyVisitTracker from '@/components/analytics/PropertyVisitTracker';
 
+export const revalidate = 300;
+
 export default async function PropertyDetailPage({ params }: { params: { slug: string } }) {
   const { property, isDemo } = await getPropertyBySlug(params.slug);
   if (!property) notFound();

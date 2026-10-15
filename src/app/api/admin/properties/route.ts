@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getAuthorizedUser } from '@/lib/admin-auth';
 import { validatePropertyInput } from '@/lib/admin-property';
 
@@ -43,6 +44,8 @@ export async function POST(request: Request) {
       if (error.code === '23505') return NextResponse.json({ error: 'That slug is already in use.' }, { status: 409 });
       return NextResponse.json({ error: 'Unable to create property.' }, { status: 500 });
     }
+    revalidatePath('/properties');
+    revalidatePath(`/properties/${data.slug}`);
     return NextResponse.json({ property: data }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid property data.' }, { status: 400 });
