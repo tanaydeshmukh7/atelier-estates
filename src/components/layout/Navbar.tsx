@@ -24,6 +24,19 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+    if (mobileMenuOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [mobileMenuOpen]);
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-40 motion-safe:transition-all motion-reduce:transition-none duration-500 ${
@@ -112,7 +125,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[73px] bg-limestone-100/98 backdrop-blur-xl border-b border-charcoal-800/15 py-8 px-6 shadow-elevation transition-all animate-in slide-in-from-top-4">
+        <div className="md:hidden fixed inset-x-0 top-full max-h-[calc(100vh-100%)] overflow-y-auto bg-limestone-100/98 backdrop-blur-xl border-b border-charcoal-800/15 py-8 px-6 shadow-elevation transition-all animate-in slide-in-from-top-4">
           <div className="flex flex-col space-y-6">
             {agencyConfig.navLinks.map((link) => (
               <Link

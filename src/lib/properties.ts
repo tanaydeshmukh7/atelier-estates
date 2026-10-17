@@ -16,10 +16,12 @@ export async function getProperties(filters?: Partial<PropertyFilterState>): Pro
 
   if (supabase) {
     try {
+      const nowIso = new Date().toISOString();
       let query = supabase
         .from('properties')
         .select('*, property_images(*)')
         .not('published_at', 'is', null)
+        .lte('published_at', nowIso)
         .in('status', ['available', 'under_offer', 'private_treaty'])
         .order('published_at', { ascending: false });
 
@@ -47,7 +49,7 @@ export async function getProperties(filters?: Partial<PropertyFilterState>): Pro
           description: item.description,
           architecturalStory: item.architectural_story || item.architecturalStory,
           price: item.price,
-          priceFormatted: item.price_formatted || `€${Number(item.price).toLocaleString()}`,
+          priceFormatted: item.price_formatted || `€${Number(item.price).toLocaleString('en-US')}`,
           location: item.location,
           propertyType: item.property_type || item.propertyType,
           status: item.status || 'available',
@@ -93,6 +95,7 @@ export async function getPropertyBySlug(slug: string): Promise<{
         .select('*, property_images(*)')
         .eq('slug', slug)
         .not('published_at', 'is', null)
+        .lte('published_at', new Date().toISOString())
         .in('status', ['available', 'under_offer', 'private_treaty'])
         .single();
 
@@ -112,7 +115,7 @@ export async function getPropertyBySlug(slug: string): Promise<{
             description: data.description,
             architecturalStory: data.architectural_story || data.architecturalStory,
             price: data.price,
-            priceFormatted: data.price_formatted || `€${Number(data.price).toLocaleString()}`,
+            priceFormatted: data.price_formatted || `€${Number(data.price).toLocaleString('en-US')}`,
             location: data.location,
             propertyType: data.property_type || data.propertyType,
             status: data.status || 'available',

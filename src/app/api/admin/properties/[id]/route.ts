@@ -3,6 +3,24 @@ import { revalidatePath } from 'next/cache';
 import { getAuthorizedUser, getStorageAdminClient } from '@/lib/admin-auth';
 import { isValidUuid, validatePropertyInput } from '@/lib/admin-property';
 
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const authorized = await getAuthorizedUser(request);
+  if (!authorized) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isValidUuid(params.id)) return NextResponse.json({ error: 'Invalid property id.' }, { status: 400 });
+
+  const { data: property, error } = await authorized.client
+    .from('properties')
+    .select('*, property_images(*)')
+    .eq('id', params.id)
+    .maybeSingle();
+
+  if (error || !property) {
+    return NextResponse.json({ error: 'Property not found.' }, { status: 404 });
+  }
+
+  return NextResponse.json({ property });
+}
+
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const authorized = await getAuthorizedUser(request);
   if (!authorized) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
