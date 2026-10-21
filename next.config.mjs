@@ -6,6 +6,8 @@ const nextConfig = {
     cpus: 1,
   },
   images: {
+    // Disable server-side image fetching: Next.js 14 follows unchecked redirects.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
