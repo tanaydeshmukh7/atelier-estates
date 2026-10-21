@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Please enter a valid full name between 2 and 100 characters.' }, { status: 400 });
   }
 
-  if (!emailPattern.test(email) || email.length > 160) {
+  if (email.length > 160 || !emailPattern.test(email)) {
     return NextResponse.json({ message: 'Please provide a valid email address.' }, { status: 400 });
   }
 
